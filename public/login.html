@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход / Регистрация - Мессенджер</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-login, .btn-register {
+            width: 100%;
+            padding: 14px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .btn-login:hover, .btn-register:hover {
+            background: #5a6fd8;
+        }
+
+        .toggle-link {
+            color: #667eea;
+            cursor: pointer;
+            text-align: center;
+            display: block;
+            margin-bottom: 10px;
+            text-decoration: underline;
+        }
+
+        .test-accounts {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .test-accounts h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .test-accounts p {
+            margin-bottom: 5px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>💬 Мессенджер</h1>
+            <p id="formTitle">Войдите в систему</p>
+        </div>
+
+        <!-- Форма входа -->
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="login-username">Имя пользователя</label>
+                <input type="text" id="login-username" name="username" placeholder="Введите имя пользователя" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Пароль</label>
+                <input type="password" id="login-password" name="password" placeholder="Введите пароль" required>
+            </div>
+            <button type="submit" class="btn-login">Войти</button>
+            <span class="toggle-link" id="showRegister">Нет аккаунта? Зарегистрироваться</span>
+        </form>
+
+        <!-- Форма регистрации (скрыта по умолчанию) -->
+        <form id="registerForm" style="display:none;">
+            <div class="form-group">
+                <label for="register-username">Имя пользователя</label>
+                <input type="text" id="register-username" name="username" placeholder="Придумайте имя пользователя" required>
+            </div>
+            <div class="form-group">
+                <label for="register-email">Email</label>
+                <input type="email" id="register-email" name="email" placeholder="Введите email" required>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Пароль</label>
+                <input type="password" id="register-password" name="password" placeholder="Придумайте пароль" required>
+            </div>
+            <button type="submit" class="btn-register">Зарегистрироваться</button>
+            <span class="toggle-link" id="showLogin">Уже есть аккаунт? Войти</span>
+        </form>
+
+        <div id="message"></div>
+
+        <div class="test-accounts">
+            <h3>🧪 Тестовые аккаунты</h3>
+            <p><strong>alice</strong> / <strong>123456</strong></p>
+            <p><strong>bob</strong> / <strong>123456</strong></p>
+        </div>
+    </div>
+
+    <script>
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+        }
+
+        // Переключение форм
+        document.getElementById('showRegister').onclick = function() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('formTitle').textContent = 'Регистрация';
+            showMessage('', '');
+        };
+        document.getElementById('showLogin').onclick = function() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('formTitle').textContent = 'Войдите в систему';
+            showMessage('', '');
+        };
+
+        // Вход
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value.trim();
+            if (!username || !password) {
+                showMessage('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('✅ Вход успешен! Перенаправление...', 'success');
+                    localStorage.setItem('token', data.token);
+                    setTimeout(() => { window.location.href = '/chat'; }, 1000);
+                } else {
+                    showMessage(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Ошибка соединения с сервером', 'error');
+            }
+        });
+
+        // Регистрация
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value.trim();
+            if (!username || !email || !password) {
+                showMessage('Пожалуйста, заполните все поля', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    showMessage('✅ Регистрация успешна! Вход...', 'success');
+                    localStorage.setItem('token', data.token);
+                    setTimeout(() => { window.location.href = '/chat'; }, 1000);
+                } else {
+                    showMessage(`❌ ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showMessage('❌ Ошибка соединения с сервером', 'error');
+            }
+        });
+    </script>
+</body>
+</html> 

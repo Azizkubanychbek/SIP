@@ -784,52 +784,38 @@
         // WebRTC
         async function startWebRTC() {
             try {
-                console.log('🎥 Запуск WebRTC...');
+                let stream = null;
+                try {
+                    // Пробуем получить и видео, и аудио
+                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                } catch (err) {
+                    // Если не получилось, пробуем только аудио
+                    alert('Нет доступа к камере. Пробуем только аудио.\n' + err.message);
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    } catch (err2) {
+                        alert('Нет доступа к микрофону.\n' + err2.message);
+                        throw err2;
+                    }
+                }
+                localStream = stream;
+                document.getElementById('localVideo').srcObject = localStream;
+                document.getElementById('localVideo').muted = true;
                 
-                // Получаем медиа поток
-                localStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: true, 
-                    audio: true 
-                });
-                
-                console.log('✅ Медиа поток получен');
-                
-                // Показываем локальное видео
-                const localVideo = document.getElementById('localVideo');
-                localVideo.srcObject = localStream;
-                localVideo.play().catch(e => console.log('Ошибка воспроизведения локального видео:', e));
-                
-                // Показываем контейнер видео
-                document.getElementById('videoContainer').style.display = 'flex';
-                
-                // Создаем RTCPeerConnection
                 peerConnection = new RTCPeerConnection({
                     iceServers: [
-                        { urls: 'stun:stun.l.google.com:19302' },
-                        { urls: 'stun:stun1.l.google.com:19302' }
+                        { urls: 'stun:stun.l.google.com:19302' }
                     ]
                 });
-                
-                console.log('✅ RTCPeerConnection создан');
-                
-                // Добавляем локальные треки
                 localStream.getTracks().forEach(track => {
                     peerConnection.addTrack(track, localStream);
-                    console.log('✅ Добавлен трек:', track.kind);
                 });
-                
-                // Обработка входящих треков
                 peerConnection.ontrack = (event) => {
-                    console.log('📹 Получен удаленный поток');
-                    const remoteVideo = document.getElementById('remoteVideo');
-                    remoteVideo.srcObject = event.streams[0];
-                    remoteVideo.play().catch(e => console.log('Ошибка воспроизведения удаленного видео:', e));
+                    document.getElementById('remoteVideo').srcObject = event.streams[0];
+                    document.getElementById('remoteVideo').muted = false;
                 };
-                
-                // Обработка ICE кандидатов
                 peerConnection.onicecandidate = (event) => {
                     if (event.candidate) {
-                        console.log('🧊 Отправка ICE кандидата');
                         socket.emit('webrtc_signal', {
                             targetUserId: selectedUser.id,
                             signal: event.candidate,
@@ -837,34 +823,17 @@
                         });
                     }
                 };
-                
-                // Обработка изменения состояния соединения
-                peerConnection.onconnectionstatechange = () => {
-                    console.log('🔗 Состояние соединения:', peerConnection.connectionState);
-                    if (peerConnection.connectionState === 'connected') {
-                        showNotification('Соединение установлено!', 'success');
-                    }
-                };
-                
-                // Создаем offer если мы инициатор
                 if (isCallInitiator) {
-                    console.log('📤 Создание offer...');
                     const offer = await peerConnection.createOffer();
                     await peerConnection.setLocalDescription(offer);
-                    
                     socket.emit('webrtc_signal', {
                         targetUserId: selectedUser.id,
                         signal: offer,
                         type: 'offer'
                     });
                 }
-                
-                isInCall = true;
-                console.log('✅ WebRTC запущен');
-                
             } catch (error) {
-                console.error('❌ Ошибка WebRTC:', error);
-                showNotification('Ошибка доступа к камере/микрофону: ' + error.message, 'error');
+                alert('Ошибка WebRTC: ' + error.message);
             }
         }
 

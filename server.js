@@ -88,6 +88,10 @@ app.get('/chat', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
 
+app.get('/test', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-webrtc.html'));
+});
+
 // Регистрация
 app.post('/api/register', async (req, res) => {
     try {
@@ -252,9 +256,8 @@ io.on('connection', (socket) => {
     
     // Инициация звонка
     socket.on('call_user', (data) => {
-        const { targetUserId, callType } = data;
+        const { targetUserId, callType, callId } = data;
         const callerId = socket.userId;
-        const callId = 'call-' + Date.now();
         
         console.log(`📞 Звонок от ${callerId} к ${targetUserId} (${callType})`);
         
@@ -274,7 +277,7 @@ io.on('connection', (socket) => {
         const { callId, answer } = data;
         console.log(`📞 Ответ на звонок ${callId}: ${answer}`);
         
-        // Уведомляем инициатора
+        // Уведомляем всех участников звонка
         io.emit('call_answered', { callId, answer });
     });
     

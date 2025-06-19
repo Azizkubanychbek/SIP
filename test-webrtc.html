@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Тест</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .video-container {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        video {
+            width: 300px;
+            height: 225px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebRTC Тест</h1>
+    
+    <div class="status" id="status">Готов к тесту</div>
+    
+    <button onclick="testCamera()">Тест камеры</button>
+    <button onclick="testMicrophone()">Тест микрофона</button>
+    <button onclick="testBoth()">Тест камеры + микрофона</button>
+    <button onclick="stopTest()">Остановить</button>
+    
+    <div class="video-container">
+        <div>
+            <h3>Локальное видео</h3>
+            <video id="localVideo" autoplay muted playsinline></video>
+        </div>
+    </div>
+    
+    <script>
+        let stream = null;
+        const status = document.getElementById('status');
+        const localVideo = document.getElementById('localVideo');
+        
+        function updateStatus(message) {
+            status.textContent = message;
+            console.log(message);
+        }
+        
+        async function testCamera() {
+            try {
+                updateStatus('Запрос доступа к камере...');
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: false 
+                });
+                localVideo.srcObject = stream;
+                updateStatus('✅ Камера работает!');
+            } catch (error) {
+                updateStatus('❌ Ошибка камеры: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        async function testMicrophone() {
+            try {
+                updateStatus('Запрос доступа к микрофону...');
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: false, 
+                    audio: true 
+                });
+                localVideo.srcObject = stream;
+                updateStatus('✅ Микрофон работает!');
+            } catch (error) {
+                updateStatus('❌ Ошибка микрофона: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        async function testBoth() {
+            try {
+                updateStatus('Запрос доступа к камере и микрофону...');
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: true, 
+                    audio: true 
+                });
+                localVideo.srcObject = stream;
+                updateStatus('✅ Камера и микрофон работают!');
+            } catch (error) {
+                updateStatus('❌ Ошибка: ' + error.message);
+                console.error(error);
+            }
+        }
+        
+        function stopTest() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+                localVideo.srcObject = null;
+                updateStatus('Тест остановлен');
+            }
+        }
+        
+        // Проверяем поддержку WebRTC
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            updateStatus('❌ WebRTC не поддерживается в этом браузере');
+        } else {
+            updateStatus('✅ WebRTC поддерживается');
+        }
+    </script>
+</body>
+</html> 
